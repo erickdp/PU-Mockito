@@ -3,6 +3,8 @@ package org.ediaz.appmockito.services;
 import org.ediaz.appmockito.models.Examen;
 import org.ediaz.appmockito.repositories.ExamenRepository;
 
+import java.util.Optional;
+
 public class ExamenServiceImp implements ExamenService {
 
     private ExamenRepository examenRepository;
@@ -12,16 +14,11 @@ public class ExamenServiceImp implements ExamenService {
     }
 
     @Override
-    public Examen findExamenPorNombre(String nombre) {
-        var exmaneOpcional = this.examenRepository.findAll()
+    public Optional<Examen> findExamenPorNombre(String nombre) {
+        return this.examenRepository.findAll() // Con mock toma esta ejecucion
                 .stream()
                 .filter(e -> e.getNombre().contains(nombre))
                 .findFirst();
 //        Devuelve optional findFirst que es una representacion del objeto que evita los nulos
-        Examen examen = null;
-        if(exmaneOpcional.isPresent()){
-            examen = exmaneOpcional.orElseThrow();
-        }
-        return examen;
     }
 }
