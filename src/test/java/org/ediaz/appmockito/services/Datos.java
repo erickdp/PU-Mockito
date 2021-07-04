@@ -15,4 +15,6 @@ public class Datos {
             "aritmetica", "probabilidades",
             "integrales", "derivadas", "ecuaciones"
     );
+
+    public static final Examen EXAMEN = new Examen(4L, "Desarrollo de sistemas");
 }

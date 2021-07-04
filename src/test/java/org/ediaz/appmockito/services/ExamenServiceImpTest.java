@@ -7,12 +7,9 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -23,7 +20,7 @@ import static org.mockito.Mockito.*;
 class ExamenServiceImpTest {
 
     @Mock
-    private ExamenRepository repository;
+    private ExamenRepository examenRepository;
     @Mock
     private PreguntaRepository preguntaRepository;
     @InjectMocks
@@ -45,16 +42,16 @@ class ExamenServiceImpTest {
 //        MockitoAnnotations.openMocks(this);
 //        Lo que hace Mockito es crear una clase que implementa la ainterfaz al vuelo
 //        Esto con el objetivo de evitar cambiar datos o agregar en una implementacion real
-//        this.repository = mock(ExamenRepository.class);
+//        this.examenRepository = mock(ExamenRepository.class);
 //        this.preguntaRepository = mock(PreguntaRepository.class);
-//        this.service = new ExamenServiceImp(repository, preguntaRepository);
+//        this.service = new ExamenServiceImp(examenRepository, preguntaRepository);
     }
 
     @Test
     void findExamenPorNombre() {
 //        Cada vez que se ejecute el metodo de findAll en la clase de service entonces retornara estos datos
 //        Se llama una simulacion del objeto ExamenRepository.class
-        when(repository.findAll()).thenReturn(Datos.EXAMENES);
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
 //        La simulacion solo se debe de hacer de metodos publicos no staticos final o private
 
         var examen = service.findExamenPorNombre("Analisis de datos");
@@ -66,7 +63,7 @@ class ExamenServiceImpTest {
 
     @Test
     void findExamenPorNombreListaVacia() {
-        when(repository.findAll()).thenReturn(Collections.emptyList());
+        when(examenRepository.findAll()).thenReturn(Collections.emptyList());
 
         var examen = service.findExamenPorNombre("Analisis de datos");
 
@@ -76,7 +73,7 @@ class ExamenServiceImpTest {
     @Test
     @DisplayName("Encontrar examen y preguntas")
     void findExamenPorNombrePreguntas() {
-        when(repository.findAll()).thenReturn(Datos.EXAMENES); // Se utilizan los datos de una clase de prueba
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES); // Se utilizan los datos de una clase de prueba
 //        when(preguntaRepository.findPreguntasPorExamenId(1L)).thenReturn(Datos.PREGUNTAS); // Solo cuando haya el id 1 se traen los datos
         when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS); // Se puede usar anyLong para obtener de cualquier id
         var examen = service.findExamenPorNombreConPreguntas("Analisis de datos");
@@ -86,14 +83,28 @@ class ExamenServiceImpTest {
     @Test
     @Disabled
     void findExamenPorNombrePreguntasVerify() {
-        when(repository.findAll()).thenReturn(Datos.EXAMENES);
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
         when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
         var examen = service.findExamenPorNombreConPreguntas("Analisis de datos");
         assertEquals(5, examen.getPreguntas().size());
 //        Para determinar si enrealidad se usa el metodo mediante mock se usa verify
-        verify(repository).findAll();
+        verify(examenRepository).findAll();
 //        En este caso fuerzo la falla porque se llamo el metodo para 1L pero valido que se haya llamado con 2L
         verify(preguntaRepository).findPreguntasPorExamenId(2L);
     }
 
+    @Test
+    @DisplayName("Prueba guardar Examen")
+    void testGuardarExamen() {
+        var examenGuardar = Datos.EXAMEN;
+        examenGuardar.setPreguntas(Datos.PREGUNTAS);
+//        Cuando guarde cualquier instanci de Examen retorna algo
+        when(examenRepository.save(any(Examen.class))).thenReturn(Datos.EXAMEN);
+        var examen = service.guardarExamen(Datos.EXAMEN);
+        assertNotNull(examen.getId());
+        assertEquals(4L, examen.getId());
+        assertEquals("Desarrollo de sistemas", examen.getNombre());
+//        Si no se le pasa preguntas este metodo no se ejecuta y no pasa el test
+        verify(preguntaRepository).guardarVarias(anyList());
+    }
 }
