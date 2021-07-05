@@ -49,7 +49,7 @@ class ExamenServiceImpTest {
 //        this.service = new ExamenServiceImp(examenRepository, preguntaRepository);
     }
 
-//    BDD Behavior Development Driver - desarrollo impulsado al comportamiento
+    //    BDD Behavior Development Driver - desarrollo impulsado al comportamiento
     @Test
     void findExamenPorNombre() {
 //        Given - correponden a las precondiciones al ambiente de prueba
@@ -116,6 +116,7 @@ class ExamenServiceImpTest {
 //        Vamos a simular la asigancion de id como lo haria en un bd
         when(examenRepository.save(any(Examen.class))).then(new Answer<Examen>() {
             Long secuencia = 4L;
+
             @Override
             public Examen answer(InvocationOnMock invocationOnMock) throws Throwable {
                 Examen examen = invocationOnMock.getArgument(0); // el argumento es el objeto que se pasa al guardar
@@ -135,7 +136,18 @@ class ExamenServiceImpTest {
         verify(preguntaRepository).guardarVarias(anyList());
     }
 
-//    Manejo de excepciones que permite unas pruebas mas robustas
+    //    Manejo de excepciones que permite unas pruebas mas robustas
+    @Test
+    void testManejoException() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+        when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenThrow(IllegalArgumentException.class);
+        var exception = assertThrows(IllegalArgumentException.class, () -> {
+            service.findExamenPorNombreConPreguntas("Desarrollo de sistemas");
+        });
 
+        assertEquals(IllegalArgumentException.class, exception.getClass());
 
+        verify(examenRepository).findAll();
+        verify(preguntaRepository).findPreguntasPorExamenId(anyLong());
+    }
 }
