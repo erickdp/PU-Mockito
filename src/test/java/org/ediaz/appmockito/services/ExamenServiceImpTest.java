@@ -5,6 +5,7 @@ import org.ediaz.appmockito.repositories.ExamenRepository;
 import org.ediaz.appmockito.repositories.PreguntaRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatcher;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -149,5 +150,63 @@ class ExamenServiceImpTest {
 
         verify(examenRepository).findAll();
         verify(preguntaRepository).findPreguntasPorExamenId(anyLong());
+    }
+
+//    Uso de Argument matcher que permite complementar ademas de verificar que el metodo se ejecuta
+//    un valor especifico
+
+    @Test
+    void testArgumentMatchers() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+        when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
+
+        service.findExamenPorNombreConPreguntas("Analisis de datos");
+
+        verify(examenRepository).findAll();
+//        Aqui se usa argThat de argument Matchers para validar un valor especifico se puede usar eq()
+        verify(preguntaRepository).findPreguntasPorExamenId(argThat(arg -> arg != null && arg.equals(1L)));
+    }
+
+    @Test
+    void testArgumentMatchers2() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES_ID_NEGATIVO);
+        when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
+
+        service.findExamenPorNombreConPreguntas("Analisis de datos");
+
+        verify(examenRepository).findAll();
+//        Se puede hacer sin la clase pero no se puede agregar un mensaje
+        verify(preguntaRepository).findPreguntasPorExamenId(argThat(
+                (argumento) -> argumento != null && argumento >= 1L)
+        );
+    }
+
+    //    Este test esta forzado a fallar para demostrar la validacion de argThat
+    @Test
+    void testArgumentMatchers3() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES_ID_NEGATIVO);
+        when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
+
+        service.findExamenPorNombreConPreguntas("Analisis de datos");
+
+        verify(examenRepository).findAll();
+        verify(preguntaRepository).findPreguntasPorExamenId(argThat(new MiArgumentMatchers()));
+    }
+
+    //    Se puede crear una clase al vuelo para usar ArgumentMatchers permitiendo agregar un mensaje personalizado
+    public static class MiArgumentMatchers implements ArgumentMatcher<Long> {
+
+        private Long argument;
+
+        @Override
+        public boolean matches(Long argument) {
+            this.argument = argument;
+            return this.argument != null && this.argument >= 1L;
+        }
+
+        @Override
+        public String toString() {
+            return "El argumento a fallado : " + this.argument;
+        }
     }
 }
