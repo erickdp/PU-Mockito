@@ -5,9 +5,7 @@ import org.ediaz.appmockito.repositories.ExamenRepository;
 import org.ediaz.appmockito.repositories.PreguntaRepository;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatcher;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
@@ -28,6 +26,10 @@ class ExamenServiceImpTest {
     private PreguntaRepository preguntaRepository;
     @InjectMocks
     private ExamenServiceImp service;
+
+    //    Captor captura los argumentos para ser verificados
+    @Captor
+    ArgumentCaptor<Long> captor;
 
     private TestInfo testInfo;
     private TestReporter testReporter;
@@ -141,9 +143,10 @@ class ExamenServiceImpTest {
     @Test
     void testManejoException() {
         when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
-        when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenThrow(IllegalArgumentException.class);
+//        Si le paso como argumento 1L entonces lanza la expecion
+        when(preguntaRepository.findPreguntasPorExamenId(1L)).thenThrow(IllegalArgumentException.class);
         var exception = assertThrows(IllegalArgumentException.class, () -> {
-            service.findExamenPorNombreConPreguntas("Desarrollo de sistemas");
+            service.findExamenPorNombreConPreguntas("Analisis de datos");
         });
 
         assertEquals(IllegalArgumentException.class, exception.getClass());
@@ -208,5 +211,29 @@ class ExamenServiceImpTest {
         public String toString() {
             return "El argumento a fallado : " + this.argument;
         }
+    }
+
+    @Test
+    void testCaptor() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+        when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
+
+        service.findExamenPorNombreConPreguntas("Analisis de datos");
+
+//        Toma el valor especifico que se envia como argumento, ya no debo de poner anyLong
+        verify(preguntaRepository).findPreguntasPorExamenId(captor.capture());
+        assertEquals(1L, captor.getValue());
+    }
+
+//    El assertThrow solo sirve cuando se devuelve algo, cuando es void cambia y se usa doThrow
+    @Test
+    void testDoThrow() {
+//        Si no se ejecuta guardarVarias la prueba falla
+        var examen = Datos.EXAMEN;
+        examen.setPreguntas(Datos.PREGUNTAS);
+        doThrow(IllegalArgumentException.class).when(preguntaRepository).guardarVarias(anyList());
+        assertThrows(IllegalArgumentException.class, () -> {
+           service.guardarExamen(examen);
+        });
     }
 }
