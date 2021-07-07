@@ -225,7 +225,7 @@ class ExamenServiceImpTest {
         assertEquals(1L, captor.getValue());
     }
 
-//    El assertThrow solo sirve cuando se devuelve algo, cuando es void cambia y se usa doThrow
+    //    El assertThrow solo sirve cuando se devuelve algo, cuando es void cambia y se usa doThrow
     @Test
     void testDoThrow() {
 //        Si no se ejecuta guardarVarias la prueba falla
@@ -233,7 +233,52 @@ class ExamenServiceImpTest {
         examen.setPreguntas(Datos.PREGUNTAS);
         doThrow(IllegalArgumentException.class).when(preguntaRepository).guardarVarias(anyList());
         assertThrows(IllegalArgumentException.class, () -> {
-           service.guardarExamen(examen);
+            service.guardarExamen(examen);
         });
+    }
+
+    //    Con do Answer se puede realizar algun evento para un determinad parametro enviado
+    @Test
+    @Disabled
+    void testDoAnswer() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+        doAnswer(invocation -> {
+            Long id = invocation.getArgument(0); // Tomo el argumento que se pasa al metodo
+            return id == 2L ? Datos.PREGUNTAS : Collections.emptyList(); // Solo si el ID del examen es 2 entonces devolvera preguntas
+        }).when(preguntaRepository).findPreguntasPorExamenId(anyLong());
+
+        var examen = service.findExamenPorNombreConPreguntas("Marcos de desarrollo");
+        assertAll(
+                () -> assertEquals(3L, examen.getId()), // Para las primeras 2 pruebas
+                () -> assertEquals("Marcos de desarrollo", examen.getNombre()),
+                () -> assertEquals(5, examen.getPreguntas().size())
+        );
+
+        verify(preguntaRepository).findPreguntasPorExamenId(anyLong());
+    }
+
+//    Segunda forma de hacer el metodo testGuardarExamen
+    @Test
+    @DisplayName("Prueba guardar Examen 2")
+    void testGuardarExamen2() {
+        var examenGuardar = Datos.EXAMEN;
+        examenGuardar.setPreguntas(Datos.PREGUNTAS);
+        doAnswer(new Answer<Examen>() {
+            Long secuencia = 4L;
+
+            @Override
+            public Examen answer(InvocationOnMock invocationOnMock) throws Throwable {
+                Examen examen = invocationOnMock.getArgument(0);
+                examen.setId(secuencia++);
+                return examen;
+            }
+        }).when(examenRepository).save(any(Examen.class));
+        var examen = service.guardarExamen(examenGuardar);
+        assertNotNull(examen.getId());
+        assertEquals(4L, examen.getId());
+        assertEquals("Desarrollo de sistemas", examen.getNombre());
+
+        verify(examenRepository).save(any(Examen.class));
+        verify(preguntaRepository).guardarVarias(anyList());
     }
 }
