@@ -1,4 +1,4 @@
-package org.ediaz.appmockito.services;
+package org.ediaz.appmockito;
 
 import org.ediaz.appmockito.models.Examen;
 

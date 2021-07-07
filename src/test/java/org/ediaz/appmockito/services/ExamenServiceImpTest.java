@@ -1,8 +1,10 @@
 package org.ediaz.appmockito.services;
 
+import org.ediaz.appmockito.Datos;
 import org.ediaz.appmockito.models.Examen;
 import org.ediaz.appmockito.repositories.ExamenRepository;
 import org.ediaz.appmockito.repositories.PreguntaRepository;
+import org.ediaz.appmockito.repositories.PreguntaRepositoryImp;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -23,7 +25,7 @@ class ExamenServiceImpTest {
     @Mock
     private ExamenRepository examenRepository;
     @Mock
-    private PreguntaRepository preguntaRepository;
+    private PreguntaRepositoryImp preguntaRepository;
     @InjectMocks
     private ExamenServiceImp service;
 
@@ -48,7 +50,7 @@ class ExamenServiceImpTest {
 //        Lo que hace Mockito es crear una clase que implementa la ainterfaz al vuelo
 //        Esto con el objetivo de evitar cambiar datos o agregar en una implementacion real
 //        this.examenRepository = mock(ExamenRepository.class);
-//        this.preguntaRepository = mock(PreguntaRepository.class);
+//        this.preguntaRepository = mock(PreguntaRepositoryImp.class);
 //        this.service = new ExamenServiceImp(examenRepository, preguntaRepository);
     }
 
@@ -257,7 +259,7 @@ class ExamenServiceImpTest {
         verify(preguntaRepository).findPreguntasPorExamenId(anyLong());
     }
 
-//    Segunda forma de hacer el metodo testGuardarExamen
+    //    Segunda forma de hacer el metodo testGuardarExamen
     @Test
     @DisplayName("Prueba guardar Examen 2")
     void testGuardarExamen2() {
@@ -280,5 +282,16 @@ class ExamenServiceImpTest {
 
         verify(examenRepository).save(any(Examen.class));
         verify(preguntaRepository).guardarVarias(anyList());
+    }
+
+//    Para poder simular parcialmente el objeto mock se puede usar doCallRealMethod
+//    Esto permite llamar al metodo real y tratandolo en un entorno casi real
+    @Test
+    void doCallRealMethodTest() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+//        when(preguntaRepository.findPreguntasPorExamenId(anyLong())).thenReturn(Datos.PREGUNTAS);
+        doCallRealMethod().when(preguntaRepository).findPreguntasPorExamenId(anyLong());
+        var examen = service.findExamenPorNombreConPreguntas("Analisis de datos");
+        assertTrue(examen.getPreguntas().contains("integrales"));
     }
 }
