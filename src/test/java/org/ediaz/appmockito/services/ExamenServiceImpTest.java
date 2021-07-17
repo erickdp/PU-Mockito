@@ -285,7 +285,7 @@ class ExamenServiceImpTest {
         verify(preguntaRepository).guardarVarias(anyList());
     }
 
-//    Para poder simular parcialmente el objeto mock se puede usar doCallRealMethod
+    //    Para poder simular parcialmente el objeto mock se puede usar doCallRealMethod
 //    Esto permite llamar al metodo real y tratandolo en un entorno casi real
     @Test
     void doCallRealMethodTest() {
@@ -296,7 +296,7 @@ class ExamenServiceImpTest {
         assertTrue(examen.getPreguntas().contains("integrales"));
     }
 
-//    Los espias ya no forman parte de los objetos mock o simulados, sus llamadas corresponden a metodo implementados reales
+    //    Los espias ya no forman parte de los objetos mock o simulados, sus llamadas corresponden a metodo implementados reales
     @Test
     void testSpy() {
         var preguntaRepository = spy(PreguntaRepositoryImp.class); // En esta ocasion se debe de hacer referencia a la clase que implementa
@@ -311,5 +311,20 @@ class ExamenServiceImpTest {
         assertEquals(1L, examen.getId());
         assertEquals("Analisis de datos", examen.getNombre());
         assertEquals(5, examen.getPreguntas().size()); // falla aqui pues devuelve solo 1 elemento
+    }
+
+    @Test
+    void ordenDeEjecicion() {
+        when(examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+
+        this.service.findExamenPorNombreConPreguntas("Analisis de datos");
+        this.service.findExamenPorNombreConPreguntas("Seguridad de ti");
+
+        var orden = inOrder(examenRepository, preguntaRepository);
+        orden.verify(examenRepository).findAll();
+        orden.verify(preguntaRepository).findPreguntasPorExamenId(1L);
+
+        orden.verify(examenRepository).findAll();
+        orden.verify(preguntaRepository).findPreguntasPorExamenId(2L);
     }
 }
