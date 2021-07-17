@@ -3,7 +3,7 @@ package org.ediaz.appmockito.services;
 import org.ediaz.appmockito.Datos;
 import org.ediaz.appmockito.models.Examen;
 import org.ediaz.appmockito.repositories.ExamenRepository;
-import org.ediaz.appmockito.repositories.PreguntaRepository;
+import org.ediaz.appmockito.repositories.ExamenRepositoryImp;
 import org.ediaz.appmockito.repositories.PreguntaRepositoryImp;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +12,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -293,5 +294,22 @@ class ExamenServiceImpTest {
         doCallRealMethod().when(preguntaRepository).findPreguntasPorExamenId(anyLong());
         var examen = service.findExamenPorNombreConPreguntas("Analisis de datos");
         assertTrue(examen.getPreguntas().contains("integrales"));
+    }
+
+//    Los espias ya no forman parte de los objetos mock o simulados, sus llamadas corresponden a metodo implementados reales
+    @Test
+    void testSpy() {
+        var preguntaRepository = spy(PreguntaRepositoryImp.class); // En esta ocasion se debe de hacer referencia a la clase que implementa
+        var examenRepository = spy(ExamenRepositoryImp.class);
+        var examenService = new ExamenServiceImp(examenRepository, preguntaRepository);
+
+        // Si se quisiera simular valores con spy se debe de usar doReturn
+        var preguntas = Arrays.asList("integrales");
+        doReturn(preguntas).when(preguntaRepository).findPreguntasPorExamenId(anyLong());
+
+        var examen = examenService.findExamenPorNombreConPreguntas("Analisis de datos");
+        assertEquals(1L, examen.getId());
+        assertEquals("Analisis de datos", examen.getNombre());
+        assertEquals(5, examen.getPreguntas().size()); // falla aqui pues devuelve solo 1 elemento
     }
 }
