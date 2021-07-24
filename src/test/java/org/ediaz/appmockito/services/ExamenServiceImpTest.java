@@ -298,6 +298,7 @@ class ExamenServiceImpTest {
 
     //    Los espias ya no forman parte de los objetos mock o simulados, sus llamadas corresponden a metodo implementados reales
     @Test
+    @Disabled
     void testSpy() {
         var preguntaRepository = spy(PreguntaRepositoryImp.class); // En esta ocasion se debe de hacer referencia a la clase que implementa
         var examenRepository = spy(ExamenRepositoryImp.class);
@@ -326,5 +327,38 @@ class ExamenServiceImpTest {
 
         orden.verify(examenRepository).findAll();
         orden.verify(preguntaRepository).findPreguntasPorExamenId(2L);
+    }
+
+//    Tambien se puede definir el numero de veces que se deben de ejecutar los metodos
+    @Test
+    void testNumeroDeInvocaciones() {
+        when(this.examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+        this.service.findExamenPorNombreConPreguntas("Analisis de datos");
+
+        verify(this.preguntaRepository, atLeast(1)).findPreguntasPorExamenId(1L); // Se define el numero de veces minimo que se puede ejecutar
+        verify(this.preguntaRepository, atLeastOnce()).findPreguntasPorExamenId(1L);
+        verify(this.preguntaRepository, atMost(3)).findPreguntasPorExamenId(1L); // Maximo de veces que se puede ejecutar
+        verify(this.preguntaRepository, atMostOnce()).findPreguntasPorExamenId(1L);
+    }
+
+    @Test
+    void testNumeroDeInvocaciones2() {
+        when(this.examenRepository.findAll()).thenReturn(Datos.EXAMENES);
+        this.service.findExamenPorNombreConPreguntas("Analisis de datos");
+
+//        verify(this.preguntaRepository, atLeast(2)).findPreguntasPorExamenId(1L); // Se define el numero de veces minimo que se puede ejecutar, falla por que solo se llama 1 vez
+        verify(this.preguntaRepository, atLeastOnce()).findPreguntasPorExamenId(1L);
+        verify(this.preguntaRepository, atMost(20)).findPreguntasPorExamenId(1L); // Maximo de veces que se puede ejecutar
+        verify(this.preguntaRepository, atMostOnce()).findPreguntasPorExamenId(1L);
+    }
+
+    @Test
+    void testNumeroDeInvocaciones3() {
+        when(this.examenRepository.findAll()).thenReturn(Collections.emptyList());
+        this.service.findExamenPorNombreConPreguntas("Analisis de datos");
+
+        verify(this.preguntaRepository, never()).findPreguntasPorExamenId(1L); // Pasa porque nunca interactua con este metodo
+        verify(this.examenRepository).findAll(); // No interactua con las preguntas pero si con los examenes
+
     }
 }
